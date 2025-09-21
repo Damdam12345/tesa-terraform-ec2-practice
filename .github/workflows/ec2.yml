@@ -1,17 +1,46 @@
-name: Test Connection
+name: Deploy HTML to EC2
 
 on:
   push:
     branches: [main]
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Test SSH
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          script: echo "Connection successful!"
+          script: |
+            # Create web directory if it doesn't exist
+            sudo mkdir -p /var/www/html
+            
+            # Backup existing file
+            sudo cp /var/www/html/index.html /var/www/html/index.html.backup.$(date +%Y%m%d_%H%M%S) 2>/dev/null || echo "No existing file to backup"
+            
+            # Download your HTML file from GitHub
+            sudo curl -o /var/www/html/index.html https://raw.githubusercontent.com/${{ github.repository }}/main/index.html
+            
+            # Set correct permissions
+            sudo chown www-data:www-data /var/www/html/index.html
+            sudo chmod 644 /var/www/html/index.html
+            
+            # Restart nginx
+            sudo systemctl restart nginx
+            
+            # Verify the deployment
+            if [ -f "/var/www/html/index.html" ]; then
+              echo "✅ Deployment successful!"
+              echo "📄 File info:"
+              ls -la /var/www/html/index.html
+              echo "🌐 Your website is live!"
+            else
+              echo "❌ Deployment failed!"
+              exit 1
+            fi
