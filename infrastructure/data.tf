@@ -21,4 +21,3 @@ data "aws_route_table" "existing" {
   route_table_id = "rtb-0d9918b937b3b41e9"
 }
 
-
