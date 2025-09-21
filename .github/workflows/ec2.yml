@@ -19,7 +19,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "./*"   # your repo files
+          source: "./index.html*"   # your repo files
           target: "/var/www/html"   # nginx web root
 
       - name: Restart Nginx
